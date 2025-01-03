@@ -40,6 +40,9 @@ else
     exit 1
 fi
 
+# Create a temporary directory for downloads
+TMP_DIR=$(mktemp -d)
+
 #---------------------------ZIG-----------------------------------
 
 # Check existing Zig version and delete if it is different
@@ -56,13 +59,13 @@ if [ ! -d "${TARGET_DIR}/zig" ]; then
     ZIG_TARBALL="zig-${OS}-${ARCH}-${LATEST_ZIG_VERSION}.tar.xz"
     ZIG_URL="https://ziglang.org/builds/${ZIG_TARBALL}"
 
-    echo "Downloading Zig version $LATEST_ZIG_VERSION..."
-    curl -L -o "${TARGET_DIR}/${ZIG_TARBALL}" "$ZIG_URL"
+    echo "Downloading Zig version $LATEST_ZIG_VERSION to $TMP_DIR..."
+    curl -L -o "${TMP_DIR}/${ZIG_TARBALL}" "$ZIG_URL"
 
     echo "Extracting Zig binary..."
     mkdir -p "${TARGET_DIR}/zig"
-    tar -xf "${TARGET_DIR}/${ZIG_TARBALL}" -C "${TARGET_DIR}/zig" --strip-components=1
-    rm "${TARGET_DIR}/${ZIG_TARBALL}"
+    tar -xf "${TMP_DIR}/${ZIG_TARBALL}" -C "${TARGET_DIR}/zig" --strip-components=1
+    rm "${TMP_DIR}/${ZIG_TARBALL}"
 fi
 
 #---------------------------ZLS-----------------------------------
@@ -85,13 +88,16 @@ if [ ! -d "${TARGET_DIR}/zls" ]; then
     ZLS_URL="https://builds.zigtools.org/${ZLS_TARBALL}"
 
     echo "Downloading ZLS..."
-    curl -L -o "${TARGET_DIR}/${ZLS_TARBALL}" "$ZLS_URL"
+    curl -L -o "${TMP_DIR}/${ZLS_TARBALL}" "$ZLS_URL"
 
     echo "Extracting ZLS binary..."
     mkdir -p "${TARGET_DIR}/zls"
-    tar -xf "${TARGET_DIR}/${ZLS_TARBALL}" -C "${TARGET_DIR}/zls"
-    rm "${TARGET_DIR}/${ZLS_TARBALL}"
+    tar -xf "${TMP_DIR}/${ZLS_TARBALL}" -C "${TARGET_DIR}/zls"
+    rm "${TMP_DIR}/${ZLS_TARBALL}"
 fi
+
+# Cleanup temporary directory
+rm -rf "$TMP_DIR"
 
 printf "Zig and ZLS have been updated successfully in %s.\n" "${TARGET_DIR}"
 printf "Zig version: %s\n" "$LATEST_ZIG_VERSION"

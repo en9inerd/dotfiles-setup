@@ -1,6 +1,6 @@
 # Dotfiles setup
 
-Bash scripts to setup dotfiles and install some software on a new machine.
+Scripts to setup dotfiles and install some software on a new machine.
 
 ## Installation
 

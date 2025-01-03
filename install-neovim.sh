@@ -27,10 +27,7 @@ fi
 NEOVIM_VERSION="nightly"
 DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/$NEOVIM_VERSION/nvim-${PLATFORM}-${ARCH}.tar.gz"
 INSTALL_DIR="$HOME/.nvim"
-TMP_DIR="/tmp/nvim-install"
-
-# Create temporary directory
-mkdir -p "$TMP_DIR"
+TMP_DIR=$(mktemp -d)
 
 # Remove existing installation if present
 if [ -d "$INSTALL_DIR" ]; then
@@ -58,8 +55,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Cleanup temporary directory
-rm -f "$TMP_DIR/nvim-${PLATFORM}-${ARCH}.tar.gz"
-rmdir "$TMP_DIR"
+rm -rf $TMP_DIR
 
 echo "Neovim installed at $INSTALL_DIR"
 echo "You can run Neovim using: $INSTALL_DIR/bin/nvim"

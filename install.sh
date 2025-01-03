@@ -34,15 +34,18 @@ else
     echo "Brew is already installed."
 fi
 
-# Check if git is installed
-if ! command -v git &> /dev/null
-then
-    echo "Git is not installed. Installing git..."
-    brew install git
-    echo "Git installed successfully."
-else
-    echo "Git is already installed."
-fi
+# List of packages to install
+packages=("lazygit" "jq" "go" "nvm" "gpg" "pinentry-mac" "pyenv" "webp" "rg" "zola")
+
+for pkg in "${packages[@]}"; do
+    if ! command -v "$pkg" &> /dev/null; then
+        echo "$pkg is not installed. Installing $pkg..."
+        brew install "$pkg"
+        echo "$pkg installed successfully."
+    else
+        echo "$pkg is already installed."
+    fi
+done
 
 # Check if neovim is installed
 if ! command -v nvim &> /dev/null
@@ -53,26 +56,15 @@ else
     echo "Neovim is already installed."
 fi
 
-# Check if lazygit is installed
-if ! command -v lazygit &> /dev/null
-then
-    echo "Lazygit is not installed. Installing lazygit..."
-    brew install lazygit
-    echo "Lazygit installed successfully."
-else
-    echo "Lazygit is already installed."
-fi
-
 # Check if Fira Code is installed
 if [ "$fira_code" -eq 0 ]; then
     echo "Skipping Fira Code installation."
 else
     FONT_URL="https://github.com/tonsky/FiraCode/releases/latest/download/Fira_Code_v6.2.zip"
-    TEMP_DIR="/tmp/fira-code-font"
+    TEMP_DIR=$(mktemp -d)
     FONT_DIR="$HOME/Library/Fonts"
     if [ ! -f "$FONT_DIR/FiraCode-Regular.ttf" ]; then
         echo "Fira Code is not installed. Installing Fira Code..."
-        mkdir -p "$TEMP_DIR"
         curl -L "$FONT_URL" -o "$TEMP_DIR/fira-code.zip"
         unzip -o "$TEMP_DIR/fira-code.zip" -d "$TEMP_DIR"
         cp "$TEMP_DIR/ttf/"* "$FONT_DIR"
