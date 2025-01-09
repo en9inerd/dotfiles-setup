@@ -23,6 +23,7 @@ done
 # Set default values
 FIRA_CODE=${FIRA_CODE:-1}
 DOTFILES_REPO=${DOTFILES_REPO:-"git@github.com:en9inerd/dotfiles.git"}
+DOTFILES_DIR="$HOME/.dotfiles"
 
 # Check if brew is installed
 if ! command -v brew &> /dev/null
@@ -57,7 +58,7 @@ else
 fi
 
 # Check if Fira Code is installed
-if [ "$fira_code" -eq 0 ]; then
+if [ "$FIRA_CODE" -eq 0 ]; then
     echo "Skipping Fira Code installation."
 else
     FONT_URL="https://github.com/tonsky/FiraCode/releases/latest/download/Fira_Code_v6.2.zip"
@@ -76,8 +77,6 @@ else
 fi
 
 # Clone dotfiles repository
-DOTFILES_DIR="$HOME/.dotfiles"
-DOTFILES_REPO="git@github.com:en9inerd/dotfiles.git"
 if [ ! -d "$DOTFILES_DIR" ]; then
     echo "Cloning dotfiles repository..."
     git clone --bare "$DOTFILES_REPO" "$DOTFILES_DIR"
@@ -86,23 +85,34 @@ else
     echo "Dotfiles repository is already cloned."
 fi
 
-# Checkout dotfiles repository
-echo "Checking out dotfiles repository..."
-git --git-dir="$DOTFILES_DIR" --work-tree="$HOME" checkout -f
-
 # Download dotfiles-manager.sh script if not available
-if [ ! -f "$HOME/.dotfiles/scripts/dotfiles-manager.sh" ]; then
+DOTFILES_MANAGER="$DOTFILES_DIR/scripts/dotfiles-manager.sh"
+if [ ! -f "$DOTFILES_MANAGER" ]; then
     echo "Downloading dotfiles manager script..."
-    curl -fsSL "https://raw.githubusercontent.com/en9inerd/dotfiles-setup/master/dotfiles-manager.sh" -o "$HOME/.dotfiles/scripts/dotfiles-manager.sh"
+    mkdir -p "$(dirname "$DOTFILES_MANAGER")"
+    curl -fsSL "https://raw.githubusercontent.com/en9inerd/dotfiles-setup/master/dotfiles-manager.sh" -o "$DOTFILES_MANAGER"
+    chmod +x "$DOTFILES_MANAGER"
 fi
 
-# Init dotfiles command as alias in .zshrc that points to dotfiles script
+# Add dotfiles alias to .zshrc
 if ! grep -q "alias dotfiles=" "$HOME/.zshrc"; then
     echo "Adding dotfiles alias to .zshrc..."
-    echo "Script to manage dotfiles" >> "$HOME/.zshrc"
-    echo "alias dotfiles='$DOTFILES_DIR/scripts/dotfiles-manager.sh'" >> "$HOME/.zshrc"
+    echo "alias dotfiles='$DOTFILES_MANAGER'" >> "$HOME/.zshrc"
     source "$HOME/.zshrc"
     echo "Dotfiles alias added successfully."
 else
     echo "Dotfiles alias is already added to .zshrc."
 fi
+
+# Configure bare repository
+dotfiles config status.showUntrackedFiles no
+
+# Checkout dotfiles repository
+echo "Checking out dotfiles repository..."
+if ! dotfiles checkout; then
+    echo "Error during checkout. There may be conflicts with existing files."
+    echo "Please resolve the conflicts and rerun the script."
+    exit 1
+fi
+
+echo "Dotfiles setup completed successfully."

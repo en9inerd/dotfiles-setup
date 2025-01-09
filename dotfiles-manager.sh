@@ -2,7 +2,7 @@
 
 # Script to manage dotfiles
 
-allowed_commands=("status" "add" "commit" "push" "pull" "log" "diff" "checkout")
+allowed_commands=("init" "status" "add" "commit" "push" "pull" "log" "diff" "checkout")
 
 if [[ " ${allowed_commands[@]} " =~ " $1 " ]]; then
     /usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME $@
