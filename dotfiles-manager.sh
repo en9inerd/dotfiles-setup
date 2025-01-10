@@ -5,7 +5,7 @@
 allowed_commands=("config" "status" "add" "commit" "push" "pull" "log" "diff" "checkout")
 
 if [[ " ${allowed_commands[@]} " =~ " $1 " ]]; then
-    /usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME $@
+    /usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME "$@"
 else
     echo "Error: Command '$1' is not allowed for the dotfiles repository."
     echo "Allowed commands: ${allowed_commands[@]}"
