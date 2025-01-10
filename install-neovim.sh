@@ -29,6 +29,8 @@ DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/$NEOVIM_VERSION
 INSTALL_DIR="$HOME/.nvim"
 TMP_DIR=$(mktemp -d)
 
+echo "Temporary directory: $TMP_DIR"
+
 # Remove existing installation if present
 if [ -d "$INSTALL_DIR" ]; then
     echo "Updating neovim"

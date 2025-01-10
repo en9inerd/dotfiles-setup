@@ -87,7 +87,7 @@ if [ ! -d "${TARGET_DIR}/zls" ]; then
     ZLS_TARBALL="zls-${OS}-${ARCH}-${LATEST_ZLS_VERSION}.tar.xz"
     ZLS_URL="https://builds.zigtools.org/${ZLS_TARBALL}"
 
-    echo "Downloading ZLS..."
+    echo "Downloading ZLS version $LATEST_ZLS_VERSION to $TMP_DIR..."
     curl -L -o "${TMP_DIR}/${ZLS_TARBALL}" "$ZLS_URL"
 
     echo "Extracting ZLS binary..."

@@ -39,7 +39,7 @@ fi
 packages=("lazygit" "jq" "go" "nvm" "gpg" "pinentry-mac" "pyenv" "webp" "rg" "zola")
 
 for pkg in "${packages[@]}"; do
-    if ! command -v "$pkg" &> /dev/null; then
+    if ! brew list "$pkg" &> /dev/null; then
         echo "$pkg is not installed. Installing $pkg..."
         brew install "$pkg"
         echo "$pkg installed successfully."
@@ -49,7 +49,7 @@ for pkg in "${packages[@]}"; do
 done
 
 # Check if neovim is installed
-if ! command -v nvim &> /dev/null
+if [ ! -f $HOME/.nvim/bin/nvim ];
 then
     echo "Neovim is not installed. Installing neovim..."
     curl -fsSL "https://raw.githubusercontent.com/en9inerd/dotfiles-setup/master/install-neovim.sh" | bash
@@ -66,6 +66,7 @@ else
     FONT_DIR="$HOME/Library/Fonts"
     if [ ! -f "$FONT_DIR/FiraCode-Regular.ttf" ]; then
         echo "Fira Code is not installed. Installing Fira Code..."
+        echo "Downloading Fira Code to $TEMP_DIR..."
         curl -L "$FONT_URL" -o "$TEMP_DIR/fira-code.zip"
         unzip -o "$TEMP_DIR/fira-code.zip" -d "$TEMP_DIR"
         cp "$TEMP_DIR/ttf/"* "$FONT_DIR"
@@ -97,19 +98,19 @@ fi
 # Add dotfiles alias to .zshrc
 if ! grep -q "alias dotfiles=" "$HOME/.zshrc"; then
     echo "Adding dotfiles alias to .zshrc..."
-    echo "alias dotfiles='$DOTFILES_MANAGER'" >> "$HOME/.zshrc"
-    source "$HOME/.zshrc"
+    echo "# Dotfiles management script" >> "$HOME/.zshrc"
+    echo -e "alias dotfiles='\$HOME/.dotfiles/scripts/dotfiles-manager.sh'\n" >> "$HOME/.zshrc"
     echo "Dotfiles alias added successfully."
 else
-    echo "Dotfiles alias is already added to .zshrc."
+    echo "Dotfiles alias is already added to .zshrc"
 fi
 
 # Configure bare repository
-dotfiles config status.showUntrackedFiles no
+/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME config status.showUntrackedFiles no
 
 # Checkout dotfiles repository
 echo "Checking out dotfiles repository..."
-if ! dotfiles checkout; then
+if ! $DOTFILES_MANAGER checkout; then
     echo "Error during checkout. There may be conflicts with existing files."
     echo "Please resolve the conflicts and rerun the script."
     exit 1
