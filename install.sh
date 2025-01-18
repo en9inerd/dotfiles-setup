@@ -36,7 +36,7 @@ else
 fi
 
 # List of packages to install
-packages=("lazygit" "jq" "go" "nvm" "gpg" "pinentry-mac" "pyenv" "webp" "rg" "zola")
+packages=("ghostty" "tmux" "lazygit" "jq" "go" "nvm" "gpg" "pinentry-mac" "pyenv" "webp" "rg" "zola")
 
 for pkg in "${packages[@]}"; do
     if ! brew list "$pkg" &> /dev/null; then
