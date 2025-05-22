@@ -24,7 +24,7 @@ else
     exit 1
 fi
 
-NEOVIM_VERSION="nightly"
+NEOVIM_VERSION="v0.11.0"
 DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/$NEOVIM_VERSION/nvim-${PLATFORM}-${ARCH}.tar.gz"
 INSTALL_DIR="$HOME/.nvim"
 TMP_DIR=$(mktemp -d)
