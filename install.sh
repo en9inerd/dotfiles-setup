@@ -1,29 +1,21 @@
 #!/usr/bin/env bash
-
 # Script to install dependencies for dotfiles
+set -e
 
 # Parse script arguments
-for i in "$@"
-do
-case $i in
-    --fira-code=*)
-    FIRA_CODE="${i#*=}"
-    shift
-    ;;
-    --dotfiles-repo=*)
-    DOTFILES_REPO="${i#*=}"
-    shift
-    ;;
-    *)
-    # unknown option
-    ;;
-esac
+for i in "$@"; do
+    case $i in
+        --fira-code=*) FIRA_CODE="${i#*=}"; shift ;;
+        --dotfiles-repo=*) DOTFILES_REPO="${i#*=}"; shift ;;
+        *) ;;
+    esac
 done
 
 # Set default values
 FIRA_CODE=${FIRA_CODE:-1}
 DOTFILES_REPO=${DOTFILES_REPO:-"git@github.com:en9inerd/dotfiles.git"}
 DOTFILES_DIR="$HOME/.dotfiles"
+DOTFILES_MANAGER="$DOTFILES_DIR/scripts/dotfiles-manager.sh"
 
 # Check if brew is installed
 if ! command -v brew &> /dev/null
@@ -36,13 +28,15 @@ else
 fi
 
 # List of packages to install
-packages=("ghostty" "tmux" "lazygit" "jq" "go" "nvm" "gpg" "pinentry-mac" "pyenv" "webp" "rg" "zola" "fd")
+packages=(
+    "ghostty" "tmux" "lazygit" "jq" "go" "nvm" "gpg"
+    "pinentry-mac" "pyenv" "webp" "rg" "zola" "fd", "fzf"
+)
 
 for pkg in "${packages[@]}"; do
-    if ! brew list "$pkg" &> /dev/null; then
-        echo "$pkg is not installed. Installing $pkg..."
+    if ! brew list "$pkg" &>/dev/null; then
+        echo "Installing $pkg..."
         brew install "$pkg"
-        echo "$pkg installed successfully."
     else
         echo "$pkg is already installed."
     fi
@@ -51,43 +45,57 @@ done
 # Check if neovim is installed
 if [ ! -f $HOME/.nvim/bin/nvim ];
 then
-    echo "Neovim is not installed. Installing neovim..."
+    echo "Installing Neovim..."
     curl -fsSL "https://raw.githubusercontent.com/en9inerd/dotfiles-setup/master/install-neovim.sh" | bash
 else
     echo "Neovim is already installed."
 fi
 
-# Check if Fira Code is installed
-if [ "$FIRA_CODE" -eq 0 ]; then
-    echo "Skipping Fira Code installation."
-else
+# Fira Code font installation
+if [ "$FIRA_CODE" -ne 0 ]; then
     FONT_URL="https://github.com/tonsky/FiraCode/releases/latest/download/Fira_Code_v6.2.zip"
-    TEMP_DIR=$(mktemp -d)
     FONT_DIR="$HOME/Library/Fonts"
     if [ ! -f "$FONT_DIR/FiraCode-Regular.ttf" ]; then
-        echo "Fira Code is not installed. Installing Fira Code..."
-        echo "Downloading Fira Code to $TEMP_DIR..."
+        echo "Installing Fira Code font..."
+        TEMP_DIR=$(mktemp -d)
         curl -L "$FONT_URL" -o "$TEMP_DIR/fira-code.zip"
         unzip -o "$TEMP_DIR/fira-code.zip" -d "$TEMP_DIR"
         cp "$TEMP_DIR/ttf/"* "$FONT_DIR"
         rm -rf "$TEMP_DIR"
-        echo "Fira Code installed successfully."
+        echo "Fira Code installed."
     else
         echo "Fira Code is already installed."
     fi
-fi
-
-# Clone dotfiles repository
-if [ ! -d "$DOTFILES_DIR" ]; then
-    echo "Cloning dotfiles repository..."
-    git clone --bare "$DOTFILES_REPO" "$DOTFILES_DIR"
-    echo "Dotfiles repository cloned successfully."
 else
-    echo "Dotfiles repository is already cloned."
+    echo "Skipping Fira Code installation."
 fi
 
-# Download dotfiles-manager.sh script if not available
-DOTFILES_MANAGER="$DOTFILES_DIR/scripts/dotfiles-manager.sh"
+# Clone dotfiles as bare repo if not already cloned
+if [ ! -d "$DOTFILES_DIR" ]; then
+    echo "Cloning dotfiles repository using --separate-git-dir..."
+    TEMP_CLONE_DIR=$(mktemp -d)
+    git clone --separate-git-dir="$DOTFILES_DIR" "$DOTFILES_REPO" "$TEMP_CLONE_DIR"
+
+    echo "Backing up conflicting files before checkout..."
+    mkdir -p "$HOME/dotfiles-backup"
+    git --git-dir="$DOTFILES_DIR" --work-tree="$HOME" ls-tree -r --name-only HEAD | while read -r file; do
+        if [ -e "$HOME/$file" ]; then
+            mkdir -p "$(dirname "$HOME/dotfiles-backup/$file")"
+            cp -p "$HOME/$file" "$HOME/dotfiles-backup/$file"
+        fi
+    done
+
+    cp -rT "$TEMP_CLONE_DIR" "$HOME"
+    rm -rf "$TEMP_CLONE_DIR"
+    echo "Dotfiles checked out."
+else
+    echo "Dotfiles repo already exists at $DOTFILES_DIR."
+fi
+
+# Configure bare repository
+/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME config status.showUntrackedFiles no
+
+# Download dotfiles-manager.sh
 if [ ! -f "$DOTFILES_MANAGER" ]; then
     echo "Downloading dotfiles manager script..."
     mkdir -p "$(dirname "$DOTFILES_MANAGER")"
@@ -95,25 +103,12 @@ if [ ! -f "$DOTFILES_MANAGER" ]; then
     chmod +x "$DOTFILES_MANAGER"
 fi
 
-# Add dotfiles alias to .zshrc
+# Add alias to .zshrc
 if ! grep -q "alias dotfiles=" "$HOME/.zshrc"; then
     echo "Adding dotfiles alias to .zshrc..."
-    echo "# Dotfiles management script" >> "$HOME/.zshrc"
-    echo -e "alias dotfiles='\$HOME/.dotfiles/scripts/dotfiles-manager.sh'\n" >> "$HOME/.zshrc"
-    echo "Dotfiles alias added successfully."
+    echo -e "\n# Dotfiles management\nalias dotfiles='$DOTFILES_MANAGER'" >> "$HOME/.zshrc"
 else
-    echo "Dotfiles alias is already added to .zshrc"
+    echo "Dotfiles alias already present in .zshrc."
 fi
 
-# Configure bare repository
-/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME config status.showUntrackedFiles no
-
-# Checkout dotfiles repository
-echo "Checking out dotfiles repository..."
-if ! $DOTFILES_MANAGER checkout; then
-    echo "Error during checkout. There may be conflicts with existing files."
-    echo "Please resolve the conflicts and rerun the script."
-    exit 1
-fi
-
-echo "Dotfiles setup completed successfully."
+echo "✅ Dotfiles setup completed successfully."
