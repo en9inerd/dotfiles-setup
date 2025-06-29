@@ -70,45 +70,22 @@ else
     echo "Skipping Fira Code installation."
 fi
 
-# Clone dotfiles as bare repo if not already cloned
-if [ ! -d "$DOTFILES_DIR" ]; then
-    echo "Cloning dotfiles repository using --separate-git-dir..."
-    TEMP_CLONE_DIR=$(mktemp -d)
-    git clone --separate-git-dir="$DOTFILES_DIR" "$DOTFILES_REPO" "$TEMP_CLONE_DIR"
-
-    echo "Backing up conflicting files before checkout..."
-    mkdir -p "$HOME/dotfiles-backup"
-    git --git-dir="$DOTFILES_DIR" --work-tree="$HOME" ls-tree -r --name-only HEAD | while read -r file; do
-        if [ -e "$HOME/$file" ]; then
-            mkdir -p "$(dirname "$HOME/dotfiles-backup/$file")"
-            cp -p "$HOME/$file" "$HOME/dotfiles-backup/$file"
-        fi
-    done
-
-    cp -rT "$TEMP_CLONE_DIR" "$HOME"
-    rm -rf "$TEMP_CLONE_DIR"
-    echo "Dotfiles checked out."
+# Install sdfm script into ~/.local/bin
+SDFM_PATH="$HOME/.local/bin/sdfm"
+if [ ! -f "$SDFM_PATH" ]; then
+    echo "Downloading sdfm script..."
+    mkdir -p "$(dirname "$SDFM_PATH")"
+    curl -fsSL "https://raw.githubusercontent.com/en9inerd/sdfm/master/sdfm.sh" -o "$SDFM_PATH"
+    chmod +x "$SDFM_PATH"
+    echo "sdfm installed to $SDFM_PATH"
 else
-    echo "Dotfiles repo already exists at $DOTFILES_DIR."
+    echo "sdfm is already present at $SDFM_PATH"
 fi
 
-# Configure bare repository
-/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME config status.showUntrackedFiles no
-
-# Download dotfiles-manager.sh
-if [ ! -f "$DOTFILES_MANAGER" ]; then
-    echo "Downloading dotfiles manager script..."
-    mkdir -p "$(dirname "$DOTFILES_MANAGER")"
-    curl -fsSL "https://raw.githubusercontent.com/en9inerd/dotfiles-setup/master/dotfiles-manager.sh" -o "$DOTFILES_MANAGER"
-    chmod +x "$DOTFILES_MANAGER"
-fi
-
-# Add alias to .zshrc
-if ! grep -q "alias dotfiles=" "$HOME/.zshrc"; then
-    echo "Adding dotfiles alias to .zshrc..."
-    echo -e "\n# Dotfiles management\nalias dotfiles='$DOTFILES_MANAGER'" >> "$HOME/.zshrc"
-else
-    echo "Dotfiles alias already present in .zshrc."
+# Add ~/.local/bin to PATH if needed
+if ! grep -q 'export PATH="$PATH:$HOME/.local/bin"' "$HOME/.zshrc"; then
+    echo "Adding ~/.local/bin to PATH in .zshrc..."
+    echo -e '\n# Add local bin to PATH\nexport PATH="$PATH:$HOME/.local/bin"' >> "$HOME/.zshrc"
 fi
 
 echo "✅ Dotfiles setup completed successfully."
