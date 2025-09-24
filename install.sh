@@ -29,7 +29,7 @@ fi
 
 # List of packages to install
 packages=(
-    "ghostty" "tmux" "jq" "go" "nvm" "gpg"
+    "tmux" "jq" "go" "fnm" "gpg"
     "pinentry-mac" "pyenv" "webp" "rg" "zola" "fd", "fzf"
 )
 
