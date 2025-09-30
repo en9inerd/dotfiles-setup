@@ -30,7 +30,7 @@ fi
 # List of packages to install
 packages=(
     "tmux" "jq" "go" "fnm" "gpg"
-    "pinentry-mac" "pyenv" "webp" "rg" "zola" "fd", "fzf"
+    "pinentry-mac" "pyenv" "webp" "rg" "zola" "fd" "fzf"
 )
 
 for pkg in "${packages[@]}"; do
