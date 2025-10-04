@@ -42,6 +42,9 @@ for pkg in "${packages[@]}"; do
     fi
 done
 
+# AeroSpace installation
+brew install --cask nikitabobko/tap/aerospace
+
 # Check if neovim is installed
 if [ ! -f $HOME/.nvim/bin/nvim ];
 then
