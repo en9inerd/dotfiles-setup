@@ -29,7 +29,7 @@ fi
 
 # List of packages to install
 packages=(
-    "tmux" "jq" "go" "fnm" "gpg"
+    "tmux" "jq" "go" "fnm" "gpg" "tree-sitter-cli"
     "pinentry-mac" "pyenv" "webp" "rg" "zola" "fd" "fzf"
 )
 
