@@ -2,27 +2,29 @@
 set -euo pipefail
 
 TERMNAME="${TERM}"
-TI_FILE="$(mktemp)"
 
-echo "Using TERM=$TERMNAME"
-echo "Dumping terminfo → $TI_FILE"
-infocmp -l -x "$TERMNAME" > "$TI_FILE"
+# Dump the current terminfo
+SRC="$(mktemp)"
+infocmp -l -x "$TERMNAME" > "$SRC"
 
-echo "Patching terminfo to add Smulx after smul=\\E[4m, ..."
-# Write patched output to a second temp file
-PATCHED="$(mktemp)"
+# If Smulx already exists, exit silently
+if grep -q 'Smulx=' "$SRC"; then
+    echo "Smulx already present in $TERMNAME. Nothing to do."
+    exit 0
+fi
+
+# Insert Smulx after smul=\E[4m,
+DST="$(mktemp)"
 awk '
   { print }
   /smul=\\E\[4m,/ && !done {
     print "    Smulx=\\E[4:%p1%dm,"
     done=1
   }
-' "$TI_FILE" > "$PATCHED"
+' "$SRC" > "$DST"
 
-echo "Compiling patched terminfo..."
-tic -x "$PATCHED"
+# Compile the updated terminfo
+tic -x "$DST"
 
-rm -f "$TI_FILE" "$PATCHED"
-
-echo "Done! Verify with:"
-echo "  infocmp -l -x \"$TERMNAME\" | grep Smulx"
+rm -f "$SRC" "$DST"
+echo "Added Smulx and updated terminfo for $TERMNAME."
