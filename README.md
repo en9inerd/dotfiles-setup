@@ -11,5 +11,5 @@ curl -L https://raw.githubusercontent.com/en9inerd/dotfiles-setup/master/install
 ## Execute to enable undercurl
 
 ```sh
-curl -sL https://raw.githubusercontent.com/yourrepo/enable-undercurl/main/enable-undercurl.sh | bash
+curl -sL https://raw.githubusercontent.com/en9inerd/dotfiles-setup/master/enable-undercurl.sh | bash
 ```
