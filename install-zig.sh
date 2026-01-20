@@ -56,7 +56,7 @@ fi
 
 # Download the latest Zig binary if not already present
 if [ ! -d "${TARGET_DIR}/zig" ]; then
-    ZIG_TARBALL="zig-${OS}-${ARCH}-${LATEST_ZIG_VERSION}.tar.xz"
+    ZIG_TARBALL="zig-${ARCH}-${OS}-${LATEST_ZIG_VERSION}.tar.xz"
     ZIG_URL="https://ziglang.org/builds/${ZIG_TARBALL}"
 
     echo "Downloading Zig version $LATEST_ZIG_VERSION to $TMP_DIR..."
@@ -84,7 +84,7 @@ fi
 
 # Download the latest ZLS binary if not already present
 if [ ! -d "${TARGET_DIR}/zls" ]; then
-    ZLS_TARBALL="zls-${OS}-${ARCH}-${LATEST_ZLS_VERSION}.tar.xz"
+    ZLS_TARBALL="zls-${ARCH}-${OS}-${LATEST_ZLS_VERSION}.tar.xz"
     ZLS_URL="https://builds.zigtools.org/${ZLS_TARBALL}"
 
     echo "Downloading ZLS version $LATEST_ZLS_VERSION to $TMP_DIR..."
