@@ -1,13 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ -z "${TERM:-}" ]]; then
+    echo "Error: TERM environment variable is not set"
+    exit 1
+fi
+
 TERMNAME="${TERM}"
 
-# Dump the current terminfo
-SRC="$(mktemp)"
-infocmp -l -x "$TERMNAME" > "$SRC"
+# Temp files for terminfo manipulation
+SRC=""
+DST=""
 
-# If Smulx already exists, exit silently
+cleanup() {
+    rm -f "$SRC" "$DST"
+}
+trap cleanup EXIT
+
+SRC="$(mktemp)"
+if ! infocmp -l -x "$TERMNAME" > "$SRC" 2>/dev/null; then
+    echo "Error: Could not find terminfo entry for $TERMNAME"
+    exit 1
+fi
+
 if grep -q 'Smulx=' "$SRC"; then
     echo "Smulx already present in $TERMNAME. Nothing to do."
     exit 0
@@ -23,8 +38,6 @@ awk '
   }
 ' "$SRC" > "$DST"
 
-# Compile the updated terminfo
 tic -x "$DST"
 
-rm -f "$SRC" "$DST"
 echo "Added Smulx and updated terminfo for $TERMNAME."
