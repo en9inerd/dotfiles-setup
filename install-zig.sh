@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Script to install/update the latest Zig and ZLS binaries
+# Script to install/update Zig and ZLS binaries
+# Usage: install-zig.sh [target_dir] [zig_version]
+#   zig_version: "master" (default) or a release tag like "0.13.0"
+#   Also configurable via ZIG_VERSION env var
 
 TMP_DIR=""
 cleanup() {
@@ -18,8 +21,13 @@ else
     TARGET_DIR=$(pwd)
 fi
 
-# Use exact version if needed, for example: LATEST_ZIG_VERSION="0.13.0"
-LATEST_ZIG_VERSION=$(curl -sf https://ziglang.org/download/index.json | jq -r '.master.version')
+# Version: arg > env var > default master
+ZIG_VERSION="${2:-${ZIG_VERSION:-master}}"
+if [ "$ZIG_VERSION" = "master" ]; then
+    LATEST_ZIG_VERSION=$(curl -sf https://ziglang.org/download/index.json | jq -r '.master.version')
+else
+    LATEST_ZIG_VERSION="$ZIG_VERSION"
+fi
 if [[ -z "$LATEST_ZIG_VERSION" || "$LATEST_ZIG_VERSION" == "null" ]]; then
     echo "Error: Failed to fetch Zig version from API"
     exit 1
@@ -61,8 +69,13 @@ if [ -d "${TARGET_DIR}/zig" ]; then
 fi
 
 if [ ! -d "${TARGET_DIR}/zig" ]; then
-    ZIG_TARBALL="zig-${ARCH}-${OS}-${LATEST_ZIG_VERSION}.tar.xz"
-    ZIG_URL="https://ziglang.org/builds/${ZIG_TARBALL}"
+    if [[ "$LATEST_ZIG_VERSION" == *"-dev"* ]]; then
+        ZIG_TARBALL="zig-${ARCH}-${OS}-${LATEST_ZIG_VERSION}.tar.xz"
+        ZIG_URL="https://ziglang.org/builds/${ZIG_TARBALL}"
+    else
+        ZIG_TARBALL="zig-${OS}-${ARCH}-${LATEST_ZIG_VERSION}.tar.xz"
+        ZIG_URL="https://ziglang.org/download/${LATEST_ZIG_VERSION}/${ZIG_TARBALL}"
+    fi
 
     echo "Downloading Zig version $LATEST_ZIG_VERSION to $TMP_DIR..."
     curl -fL -o "${TMP_DIR}/${ZIG_TARBALL}" "$ZIG_URL"
@@ -94,7 +107,11 @@ if [ -d "${TARGET_DIR}/zls" ]; then
 fi
 
 if [ ! -d "${TARGET_DIR}/zls" ]; then
-    ZLS_TARBALL="zls-${ARCH}-${OS}-${LATEST_ZLS_VERSION}.tar.xz"
+    if [[ "$LATEST_ZLS_VERSION" == *"-dev"* ]]; then
+        ZLS_TARBALL="zls-${ARCH}-${OS}-${LATEST_ZLS_VERSION}.tar.xz"
+    else
+        ZLS_TARBALL="zls-${OS}-${ARCH}-${LATEST_ZLS_VERSION}.tar.xz"
+    fi
     ZLS_URL="https://builds.zigtools.org/${ZLS_TARBALL}"
 
     echo "Downloading ZLS version $LATEST_ZLS_VERSION to $TMP_DIR..."
