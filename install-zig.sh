@@ -88,8 +88,10 @@ fi
 
 #---------------------------ZLS-----------------------------------
 
-LATEST_ZLS_VERSION=$(curl -sf --get "https://releases.zigtools.org/v1/zls/select-version" --data-urlencode "zig_version=${LATEST_ZIG_VERSION}" --data-urlencode "compatibility=only-runtime" | jq -r '.version')
+ZLS_RESPONSE=$(curl -sf --get "https://releases.zigtools.org/v1/zls/select-version" --data-urlencode "zig_version=${LATEST_ZIG_VERSION}" --data-urlencode "compatibility=only-runtime")
+LATEST_ZLS_VERSION=$(echo "$ZLS_RESPONSE" | jq -r '.version // empty')
 if [[ -z "$LATEST_ZLS_VERSION" || "$LATEST_ZLS_VERSION" == "null" ]]; then
+    echo "ZLS API response: $ZLS_RESPONSE"
     echo "Error: Failed to fetch ZLS version from API"
     exit 1
 fi
@@ -109,10 +111,11 @@ fi
 if [ ! -d "${TARGET_DIR}/zls" ]; then
     if [[ "$LATEST_ZLS_VERSION" == *"-dev"* ]]; then
         ZLS_TARBALL="zls-${ARCH}-${OS}-${LATEST_ZLS_VERSION}.tar.xz"
+        ZLS_URL="https://builds.zigtools.org/${ZLS_TARBALL}"
     else
-        ZLS_TARBALL="zls-${OS}-${ARCH}-${LATEST_ZLS_VERSION}.tar.xz"
+        ZLS_TARBALL="zls-${ARCH}-${OS}.tar.xz"
+        ZLS_URL="https://github.com/zigtools/zls/releases/download/${LATEST_ZLS_VERSION}/${ZLS_TARBALL}"
     fi
-    ZLS_URL="https://builds.zigtools.org/${ZLS_TARBALL}"
 
     echo "Downloading ZLS version $LATEST_ZLS_VERSION to $TMP_DIR..."
     curl -fL -o "${TMP_DIR}/${ZLS_TARBALL}" "$ZLS_URL"
