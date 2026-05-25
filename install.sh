@@ -18,7 +18,7 @@ else
 fi
 
 packages=(
-    "tmux" "jq" "go" "fnm" "gpg" "tree-sitter-cli"
+    "neurosnap/tap/zmx" "jq" "go" "fnm" "gpg" "tree-sitter-cli"
     "pinentry-mac" "pyenv" "webp" "rg" "zola" "fd" "fzf"
 )
 
